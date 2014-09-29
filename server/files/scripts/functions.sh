@@ -35,11 +35,14 @@ touch "$DIRETORIO_ID_TURMA"
 # 2
 # 3
 
+
 # aval_1
 # 1:B
 # 2:C
 #
 
+
+#linha
 
 # TODO Criar diretorios que não existem
 function verifica_id_aluno() {
