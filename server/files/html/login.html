@@ -1,0 +1,52 @@
+<style>
+	body{
+		padding:0;
+		margin:0;
+		font: 13px Arial;
+	}
+	.login{
+		margin: 0 auto;
+		width: 300px;
+		margin-top:200px
+	}
+	.form-div {
+		padding: 10px;
+		float:right;
+	}
+	.form-label {
+		width: 50px;
+		margin-right: 10px;
+	}
+	
+	.form-input {
+		width:200px;
+	}
+	
+	#enviar{
+		font-size:14px;
+		background-color: #AAA;
+		padding:10px;
+		cursor:pointer;
+		border-radius: 3px;
+	}
+	#enviar:hover{
+		background-color: grey;
+		color: #FFF;
+	}
+</style>
+<script>
+	$(document).ready(function(){
+		$("#enviar").click(function() {
+			$("#formLogin").submit();
+		})
+	})
+</script>
+<div class="login">
+	<iframe style="display:none" name="login_frame" id="login_frame" ></iframe>
+	<form action="/admin/login/valida/" method="POST" id="formLogin" name="formLogin">
+		<h2 style="text-align: center">Login Sistema Administrativo</h2>
+		<div class="form-div"><label class="form-label">Usuario</label><input class="form-input" id="usuario" name="usuario" /></div>
+		<div class="form-div"><label class="form-label">Senha</label><input type="password" class="form-input" id="senha" name="senha" /></div>
+		<div class="form-div"><div id="enviar">Enviar</div></div>
+	</form>
+</div>
