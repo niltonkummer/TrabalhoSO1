@@ -3,21 +3,6 @@
 <script>
 	
 	$(document).ready(function() {
-		/*$("#cadastrarAluno").click(function(){
-			callAjax($(this).attr("url"))
-		});
-		$("#cadastrarDisciplina").click(function() {
-			callAjax($(this).attr("url"))
-		});
-		
-		$("#listarAlunos").click(function() {
-			callAjax($(this).attr("url"))
-		});
-		
-		$("#pesquisarAlunos").click(function() {
-			callAjax($(this).attr("url"))
-		});*/
-		
 		$(".btns-menu").find("li").each(function(){
 			$(this).click(function(){
 				callAjax($(this).attr("url"))
@@ -73,9 +58,9 @@
 		float:right;
 	}
 	.btn {
+		font-size:13px;
 		padding:10px;
 		margin-bottom: 1px;
-		border-radius: 3px;
 		background-color: #ccc;
 		cursor: pointer;
 	}
@@ -101,7 +86,7 @@
 </style>
 <body>
 <div id="side-bar">
-	<div style="border-bottom: 1px solid; padding: 5px">
+	<div style="border: 1px solid #ccc; padding: 5px">
 		<div class="title">Consulta e Cadastro</div>
 		<ul class="btns-menu">
 			<li id="cadastrarAluno" url="/cadastrar-aluno/"><div class="btn">Cadastrar Aluno</div></li>
@@ -110,9 +95,9 @@
 			<li id="pesquisarAlunos" url="/pesquisar-aluno/"><div class="btn">Pesquisar Alunos</div></li>
 		</ul>
 	</div>
-	<div style="border-bottom: 1px solid; padding: 5px">
+	<div style="border: 1px solid #ccc; border-top: none; padding: 5px">
 		<div class="title">Acesso Administrativo</div>
-		<ul class="btn-menu">
+		<ul class="btns-menu">
 			<li id="salvarTurma" url="/salvar-turma/"><div class="btn">Salvar turma</div></li>
 			<li id="reporTurma" url="/repor-turma/"><div class="btn">Repor turma</div></li>
 			<li id="apagarTurma" url="/apagar-turma/"><div class="btn">Apagar turma</div></li>

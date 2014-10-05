@@ -119,7 +119,6 @@ function verificar_disciplina() {
 # params: disciplina
 function sa_repor() {
 	file=$(ls -t "$DIRETORIO_DISCIPLINAS/$1/bkp" | head -1)
-	echo $file
 	cp -f "$DIRETORIO_DISCIPLINAS/$1/bkp/$file" "$DIRETORIO_DISCIPLINAS/$1/turma"
 }
 
@@ -138,8 +137,13 @@ function listar_disciplina_bkp() {
 	done
 }
 
+# params: disciplina, arquivo
 function sa_recuperar() {
-	echo ""
+	cp -f "$DIRETORIO_DISCIPLINAS/$1/bkp/$file" "$DIRETORIO_DISCIPLINAS/$1/turma"
+}
+
+function sa_apagar() {
+	rm -rf "$DIRETORIO_DISCIPLINAS/$1/"
 }
 
 # Verifica a função que vai executar
@@ -164,13 +168,17 @@ case $1 in
 	"listar_alunos_por_disciplina")
 	listar_alunos_por_disciplina "$2"
 	;;
-	"salvar")
+	"verificar_disciplina")
+	verificar_disciplina "$2"
+	;;
+	"sa_salvar")
 	sa_salvar "$2"
 	;;
-	"repor")
+	"sa_repor")
 	sa_repor "$2"
 	;;
-	"apagar")
+	"sa_apagar")
+	sa_apagar "$2"
 	;;
 	"compactar")
 	;;

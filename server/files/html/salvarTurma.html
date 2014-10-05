@@ -1,29 +1,33 @@
 <script>
-	$("#disciplina").change(function() {
+	$("#enviarForm").click(function() {
+		if ($("[name=disciplina]").val() == "Selecione uma disciplina") {
+			alert("Selecione uma turma")
+			return
+		}
 		$.ajax({
-			url: "/listar-alunos-api/",
+			url: "/salvar-turma-api/",
 			data: $("#formPost").serialize()
 		}).done(function(data) {
-			$("#target").html(data)
+			alert("Turma Salva")
 		});
 	});
 </script>
 
 <div style=" margin: 100px auto">
-	<center><h2>Lista de Alunos por Disciplina</h2></center>
+	<center><h2>Salvar turma</h2></center>
 	<form id="formPost" name="formPost" action="/listar-alunos-api/">
 		<table>
 			<tr>
 				<td><label>Disciplina:</label></td>
-				<td><select id="disciplina" name="disciplina">
+				<td><select name="disciplina">
 					<option>Selecione uma disciplina</option>
 					{{range $value := .Disciplinas}}
 					<option value="{{$value}}">{{$value}}</option>
 					{{end}}
 				</select>
 				</td>
+				<td><div  id="enviarForm" class="btn" style="float:right;" >Salvar</div></td>
 			</tr>
 		</table>
 	</form>
-<div id="target" style="border:1px solid #ccc; overflow-y: auto; height: 400px"></div>
 </div>

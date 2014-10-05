@@ -1,0 +1,44 @@
+<script>
+	$("#enviarForm").click(function() {
+		if ($("[name=disciplina]").val() == "Selecione uma disciplina") {
+			alert("Selecione uma turma")
+			return
+		}
+		$.ajax({
+			url: "/verificar-turma-api/",
+			data: $("#formPost").serialize()
+		}).done(function(data) {
+			var ok = true; 
+			if (JSON.parse(data).existe) {
+				ok = confirm("Existe um arquivo para essa turma. Deseja substituir?")
+			}
+			if (ok) {
+				$.ajax({
+					url: "/repor-turma-api/",
+					data: $("#formPost").serialize()
+				}).done(function(data) {
+					alert("Turma Reposta")
+				})
+			}
+		});
+	});
+</script>
+
+<div style=" margin: 100px auto">
+	<center><h2>Repor turma</h2></center>
+	<form id="formPost" name="formPost">
+		<table>
+			<tr>
+				<td><label>Disciplina:</label></td>
+				<td><select name="disciplina">
+					<option>Selecione uma disciplina</option>
+					{{range $value := .Disciplinas}}
+					<option value="{{$value}}">{{$value}}</option>
+					{{end}}
+				</select>
+				</td>
+				<td><div  id="enviarForm" class="btn" style="float:right;" >Repor</div></td>
+			</tr>
+		</table>
+	</form>
+</div>
