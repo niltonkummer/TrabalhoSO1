@@ -1,0 +1,22 @@
+<style>
+	.item-table {
+		padding: 6px 10px;
+	}
+</style>
+<table style="font: 14px Arial; width: 100%">
+	{{ range $i, $linhas := .Items }}
+	<tr>
+		{{ range $linha := $linhas.Data }}
+			{{if eq 0 $i}}
+				<th>{{$linha}}</th>
+			{{else}}
+				<td class="item-table" style="background-color:{{$linhas.Cor}}">{{$linha}}</td>	
+			{{end}}
+		
+		{{end}}
+	</tr>
+	{{end}}
+	<tr>
+		<td></td><td></td><td><div  id="enviarForm" class="btn" style="float:right;" >Salvar turma</div></td>
+	</tr>
+</table>

@@ -2,31 +2,49 @@ package main
 
 import (
 	"fmt"
-	"hash/crc32"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"os/exec"
-	"path/filepath"
-	"strconv"
+	//"path/filepath"
+	"strings"
 	"text/template"
 )
 
-var Tokens = make(map[uint32]bool)
-
-func setToken(hash uint32, value bool) {
-	Tokens[hash] = value
-}
-func getToken(hash uint32) bool {
-	if _, ok := Tokens[hash]; ok {
-		return true
-	}
-	return false
-}
+var SHELL_FUNC_PATH = "./"
 
 const (
-	DEFAULT_JQUERY = `<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>`
+	DEFAULT_JQUERY  = `<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>`
+	SHELL_FUNCTIONS = `./files/scripts/functions2.sh`
+)
+
+// shell functions
+const (
+	cadastrar_aluno = "cadastrar_aluno" // "$2" "$3" "$4" "$5"
+	// disciplina, nome do aluno
+	pesquisar_aluno = "pesquisar_aluno" // "$2"
+
+	cadastrar_disciplina = "cadastrar_disciplina" //"$2"
+
+	listar_disciplinas = "listar_disciplinas"
+
+	listar_alunos_por_disciplina = "listar_alunos_por_disciplina" // "$2"
+
+	// params: disciplina
+	sa_salvar = "salvar"
+
+	// Listar BKP
+	// params: disciplina
+	listar_bkp = "listar_bkp" // $2
+
+	// Repoe um arquivo de turma por um escolhido
+	// params: nome_disciplina{data}
+	repor = "repor"
+
+	// params: nome_disciplina
+	apagar = "apagar"
+
+	compactar = "compactar"
 )
 
 type HtmlTemplate struct {
@@ -34,13 +52,18 @@ type HtmlTemplate struct {
 }
 
 func serve() {
-	http.HandleFunc("/admin/", indexAdmin)
-	http.HandleFunc("/admin/login/", adminLogin)
-	http.HandleFunc("/admin/login/valida/", adminValidaLogin)
-	http.HandleFunc("/admin/cadastrar-aluno/", cadastraAluno)
-	http.HandleFunc("/admin/cadastrar-disciplina/", cadastraDisciplina)
-	http.HandleFunc("/admin/cadastrar-professor/", cadastraProfessor)
-	http.HandleFunc("/busca-aluno/", buscaAluno)
+	fmt.Println(http.FileServer(http.Dir("./")))
+	http.Handle("/static/", http.FileServer(http.Dir("files")))
+	http.HandleFunc("/", paginaInicial)
+	http.HandleFunc("/cadastrar-aluno/", cadastrarAlunoView)
+	http.HandleFunc("/listar-alunos/", listarAlunosView)
+	http.HandleFunc("/pesquisar-aluno/", pesquisarAlunoView)
+	http.HandleFunc("/cadastrar-disciplina/", cadastrarDisciplinaView)
+
+	http.HandleFunc("/cadastrar-aluno-api/", cadastrarAluno)
+	http.HandleFunc("/pesquisar-aluno-api/", pesquisarAluno)
+	http.HandleFunc("/listar-alunos-api/", listarAlunos)
+	http.HandleFunc("/cadastrar-disciplina-api/", cadastrarDisciplina)
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -60,76 +83,145 @@ func parseDefaultTemplate(w http.ResponseWriter, reader io.Reader) {
 	tmpl.Execute(w, html_tmpl)
 }
 
-func adminLogin(w http.ResponseWriter, r *http.Request) {
-	fh, err := os.Open("./files/html/login.html")
+type A struct {
+	Disciplinas []string
+}
+
+func paginaInicial(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseFiles("./files/html/main.html"))
+	t.Execute(w, nil)
+}
+
+func cadastrarAlunoView(w http.ResponseWriter, r *http.Request) {
+	dis := A{listarDisciplinas()}
+	t := template.Must(template.ParseFiles("./files/html/cadastroAluno.html"))
+	t.Execute(w, dis)
+}
+
+func cadastrarDisciplinaView(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseFiles("./files/html/cadastrarDisciplina.html"))
+	t.Execute(w, nil)
+}
+
+func listarAlunosView(w http.ResponseWriter, r *http.Request) {
+	dis := A{listarDisciplinas()}
+	t := template.Must(template.ParseFiles("./files/html/listarAlunos.html"))
+	t.Execute(w, dis)
+}
+
+func pesquisarAlunoView(w http.ResponseWriter, r *http.Request) {
+	t := template.Must(template.ParseFiles("./files/html/pesquisarAluno.html"))
+	t.Execute(w, nil)
+}
+
+type ListaAlunos struct {
+	Disciplina string
+	Items      []Linha
+}
+type Linha struct {
+	Cor  string
+	Data []string
+}
+
+func parseAlunosLista(header, lista []string) ListaAlunos {
+	
+	lst := ListaAlunos{"",make([]Linha, len(lista)+1)}
+	lst.Items[0] = Linha{"",header}
+	for i, registro := range lista {
+
+		item := strings.Split(registro, ":")
+		color := "#FFF"
+		if i%2 == 0 {
+			color = "#EEE"
+		}
+		items := []string{}
+		for _, valor := range item {
+			items = append(items, valor)
+		}
+		lst.Items[i+1] = Linha{color, items}
+	}
+	
+	return lst
+}
+
+func listarAlunos(w http.ResponseWriter, r *http.Request) {
+	disciplina := r.FormValue("disciplina")
+	data, err := exec.Command(SHELL_FUNCTIONS,
+		listar_alunos_por_disciplina,
+		disciplina,
+	).Output()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	parseDefaultTemplate(w, fh)
+	slc := strings.Split(string(data), "\n")
+	lst := parseAlunosLista([]string{"Matricula", "Nome", "Conceito"},slc[:len(slc)-1])
+	lst.Disciplina = disciplina
+	t := template.Must(template.ParseFiles("./files/html/listaDeAlunos.html"))
+	t.Execute(w, lst)
 }
 
-func validaLogin(user, password string) bool {
-	if user == "root" && password == "root" {
-		return true
+func listarDisciplinas() []string {
+	data, err := exec.Command(SHELL_FUNCTIONS,
+		listar_disciplinas,
+	).Output()
+	if err != nil {
+		return nil
 	}
-	return false
+	slc := strings.Split(string(data), "\n")
+	return slc[:len(slc)-1]
 }
-
-func adminValidaLogin(w http.ResponseWriter, r *http.Request) {
-	user := r.PostFormValue("usuario")
-	password := r.PostFormValue("senha")
-	ok := validaLogin(user, password)
-	if !ok {
-		http.Error(w, "Login invalido", http.StatusForbidden)
-		return
-	}
-	hash := crc32.ChecksumIEEE(append([]byte(user), []byte(password)...))
-	setToken(hash, true)
-	http.Redirect(w, r, "/admin/?c="+fmt.Sprintf("%d", hash), http.StatusFound)
-	return
-}
-
-func indexAdmin(w http.ResponseWriter, r *http.Request) {
-	token := r.FormValue("c")
-	hash, _ := strconv.ParseUint(token, 10, 32)
-	fmt.Println(hash)
-	if !getToken(uint32(hash)) {
-		http.Error(w, "Não logado", http.StatusForbidden)
-		return
-	}
-	w.Write([]byte("oi, bem vindo"))
-}
-
-func cadastraUsuario(w http.ResponseWriter, r *http.Request) {
-	//exec.Command("", )
-}
-
-func cadastraDisciplina(w http.ResponseWriter, r *http.Request) {}
-
-func cadastraProfessor(w http.ResponseWriter, r *http.Request) {}
-
-func cadastraAluno(w http.ResponseWriter, r *http.Request) {
-	filepath_abs, _ := filepath.Abs("./files/scripts/functions.sh")
+func cadastrarAluno(w http.ResponseWriter, r *http.Request) {
+	matricula := r.FormValue("matricula")
 	nome := r.FormValue("nome")
-	data, err := exec.Command(filepath_abs, "cadastra_aluno", nome).Output()
+	conceito := r.FormValue("conceito")
+	disciplina := r.FormValue("disciplina")
+
+	data, err := exec.Command(SHELL_FUNCTIONS,
+		cadastrar_aluno,
+		matricula,
+		nome,
+		conceito,
+		disciplina,
+	).Output()
 	if err != nil {
 		http.Error(w, string(data)+" "+err.Error(), http.StatusBadRequest)
 		return
 	}
-	w.Write(data)
+	fmt.Println(string(data))
+	w.Write([]byte(data))
 }
 
-func buscaAluno(w http.ResponseWriter, r *http.Request) {
-	filepath_abs, _ := filepath.Abs("./files/scripts/functions.sh")
-	data, err := exec.Command(filepath_abs, "busca_aluno", "Nilton").Output()
+func pesquisarAluno(w http.ResponseWriter, r *http.Request) {
+	nome := r.FormValue("nome")
+	data, err := exec.Command(
+		SHELL_FUNCTIONS, 
+		pesquisar_aluno, 
+		nome).Output()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	w.Write(data)
+	slc := strings.Split(string(data), "\n")
+	lst := parseAlunosLista([]string{"Disciplina","Matricula", "Nome", "Conceito"},slc[:len(slc)-1])
+	t := template.Must(template.ParseFiles("./files/html/listaDeAlunos.html"))
+	t.Execute(w, lst)
+}
+
+func cadastrarDisciplina(w http.ResponseWriter, r *http.Request) {
+	nome := r.FormValue("nome")
+
+	data, err := exec.Command(SHELL_FUNCTIONS,
+		cadastrar_disciplina,
+		nome).Output()
+	if err != nil {
+		http.Error(w, string(data)+" "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	fmt.Println(string(data))
+	w.Write([]byte(data))
 }
 
 func main() {
+	// SHELL_FUNC_PATH, _ = filepath.Abs(SHELL_FUNCTIONS)
 	serve()
 }

@@ -91,6 +91,32 @@ function buscar_alunos() {
 	done
 }
 
+function buscar_aluno_por_id() {
+	if [ "$linha"  ==  "" ]
+	then 
+		return 0
+	fi 
+	linha=$(cat "$DIRETORIO_ALUNOS" | cut -d $SEPARADOR -f 1 | grep -wn "$1" | cut -d $SEPARADOR -f 1)
+	if [ "$linha"  ==  "" ]
+	then 
+		return 0
+	fi 
+	head -n $linha "$DIRETORIO_ALUNOS" | tail -1 | cut -d $SEPARADOR -f 2
+}
+
+function validar_aluno() {
+	if [ "$linha"  ==  "" ]
+	then 
+		return 0
+	fi 
+	linha=$(cat "$DIRETORIO_ALUNOS" | cut -d $SEPARADOR -f 1 | grep -wn "$1" | cut -d $SEPARADOR -f 1)
+	if [ "$linha"  ==  "" ]
+	then 
+		return 0
+	fi
+	return 1
+}
+
 # Verifica pelo nome da disciplina se a mesma já existe
 function verificar_disciplina() {
 	e=$(cat "$DIRETORIO_DISCIPLINAS" | cut -d $SEPARADOR -f 2 | grep -w $1 | wc -l)
@@ -111,6 +137,34 @@ function cadastrar_disciplina() {
 	# insere a disciplina no arquivo de disciplina
 	$(echo "$id_disciplina:$1" >> "$DIRETORIO_DISCIPLINAS")
 	return 0
+}
+
+function validar_disciplina_por_id() {
+	if [ "$1"  ==  "" ]
+	then 
+		return 0
+	fi 
+	linha=$(cat "$DIRETORIO_DISCIPLINAS" | cut -d $SEPARADOR -f 1 | grep -wn "$1" | cut -d $SEPARADOR -f 1)
+	if [ "$linha"  ==  "" ]
+	then 
+		return 0
+	fi 
+	
+	return 1
+}
+
+function pegar_disciplina_por_id() {
+	if [ "$1"  ==  "" ]
+	then 
+		return 0
+	fi 
+	linha=$(cat "$DIRETORIO_DISCIPLINAS" | cut -d $SEPARADOR -f 1 | grep -n "$1" | cut -d $SEPARADOR -f 1)
+	if [ "$linha"  ==  "" ]
+	then 
+		return 0
+	fi 
+	
+	head -n $linha "$DIRETORIO_DISCIPLINAS" | tail -1 | cut -d $SEPARADOR -f 2
 }
 
 ## FUNCOES DE TURMA
@@ -139,10 +193,52 @@ function gerar_turma() {
 }
 
 # Matricula um aluno em uma turma
-# params: id_aluno,id_disciplina
+# params: id_aluno,id_disciplina, id_turma
 function matricular_aluno() {
 	# ID_matricula
-	echo ""
+	id_aluno=$1
+	id_disciplina=$2
+	validar_disciplina_por_id $id_disciplina
+	disciplina_valida=$?
+	if test $disciplina_valida -ne 1
+	then 
+		return 1
+	fi
+	
+	linha=$(cat "$DIRETORIO_DISCIPLINAS" | cut -d $SEPARADOR -f 1 | grep -wn $id_disciplina | cut -d $SEPARADOR -f 1)
+	nome_disciplina=$(head -n $linha "$DIRETORIO_DISCIPLINAS"| cut -d $SEPARADOR -f 2 | tail -1)
+	
+	validar_aluno $id_aluno
+	aluno_valido=$?
+	if test $aluno_valido -ne 1
+	then 
+		return 1
+	fi
+
+	validar_aluno_matriculado $id_aluno "$nome_disciplina"
+	matriculado=$?
+	if test $matriculado -eq 1
+	then
+		#aluno já matriculado na turma
+		return 1
+	fi
+	echo $id_aluno >> "$DIRETORIO_TURMAS/$nome_disciplina/alunos_matriculados"
+}
+
+function validar_aluno_matriculado() {
+	if [ "$1"  ==  "" ]
+	then 
+		return 0
+	fi 
+
+	touch "$DIRETORIO_TURMAS/$2/alunos_matriculados"
+	linha=$(cat "$DIRETORIO_TURMAS/$2/alunos_matriculados" | cut -d $SEPARADOR -f 1 | grep -wn "$1" | cut -d $SEPARADOR -f 1)
+	if [ "$linha"  ==  "" ]
+	then 
+		return 0
+	fi 
+	
+	return 1
 }
 
 function validar_professor() {
@@ -153,7 +249,6 @@ function validar_professor() {
 	fi
 	
 	id=$(cat "$DIRETORIO_PROFESSORES" |  cut -d $SEPARADOR -f 1 | grep -w $1)
-	
 	if  [ "$id" != "" ]  && test $id -eq $1 
 	then
 		return 1
@@ -162,9 +257,64 @@ function validar_professor() {
 	
 }
 
-function verifica_turma() {
-	grep "$DIRETORIO_TURMAS"
+function pegar_nome_professor_por_id() {
+	if [ "$1"  ==  "" ]
+	then 
+		return 0
+	fi 
+	linha=$(cat "$DIRETORIO_PROFESSORES" | cut -d $SEPARADOR -f 1 | grep -n "$1" | cut -d $SEPARADOR -f 1)
+	if [ "$linha"  ==  "" ]
+	then 
+		return 0
+	fi 
+	
+	head -n $linha "$DIRETORIO_PROFESSORES" | tail -1 | cut -d $SEPARADOR -f 2
 }
+
+# Recebe o id da disciplina e exibe os alunos
+function listar_alunos_por_disciplina() {
+	validar_disciplina_por_id $1
+	disciplina_valida=$?
+	if test $disciplina_valida -ne 1
+	then 
+		return 1
+	fi
+	linha=$(cat "$DIRETORIO_DISCIPLINAS" | cut -d $SEPARADOR -f 1 | grep -wn $1 | cut -d $SEPARADOR -f 1)
+	nome_disciplina=$(head -n $linha "$DIRETORIO_DISCIPLINAS"| cut -d $SEPARADOR -f 2 | tail -1)
+	
+	if ! test -f "$DIRETORIO_TURMAS/$nome_disciplina/alunos_matriculados" 
+	then
+		return 0
+	fi
+
+	alunos=$(cat "$DIRETORIO_TURMAS/$nome_disciplina/alunos_matriculados")
+	
+	for aluno in $alunos
+	do
+		cat "$DIRETORIO_ALUNOS" | grep -w $aluno 
+	done
+}
+
+# Recebe o id da disciplina e exibe os alunos
+function listar_aluno_por_disciplina() {
+	validar_disciplina_por_id $1
+	disciplina_valida=$?
+	if test $disciplina_valida -ne 1
+	then 
+		return 1
+	fi
+	linha=$(cat "$DIRETORIO_DISCIPLINAS" | cut -d $SEPARADOR -f 1 | grep -wn $1 | cut -d $SEPARADOR -f 1)
+	nome_disciplina=$(head -n $linha "$DIRETORIO_DISCIPLINAS"| cut -d $SEPARADOR -f 2 | tail -1)
+	
+	echo $nome_disciplina
+	alunos_id=$(cat "$DIRETORIO_TURMAS/$nome_disciplina/alunos_matriculados")
+	for aluno in $alunos
+	do
+		cat "$DIRETORIO_ALUNOS" | grep -w $aluno 
+	done
+}
+
+function 
 
 # Seleciona a professora pelo login
 
@@ -201,12 +351,19 @@ function cadastrar_professores_padrao() {
 	echo "3:Alfredo" >> "$DIRETORIO_PROFESSORES"
 }
 
+
 case $1 in 
 	"cadastrar_aluno")
-	cadastrar_aluno $2
+	cadastrar_aluno "$2"
 	;;
 	"buscar_alunos")
 	buscar_alunos $2
+	;;
+	"buscar_aluno_por_id")
+	buscar_aluno_por_id $2
+	;;
+	"matricular_aluno")
+	matricular_aluno $2 $3
 	;;
 	"cadastrar_disciplina")
 	cadastrar_disciplina $2
@@ -216,6 +373,18 @@ case $1 in
 	;;
 	"cadastrar_turma")
 	cadastrar_turma $2 $3
+	;;
+	"listar_alunos_por_turma")
+	listar_alunos_por_turma $2
+	;;
+	"pegar_nome_professor_por_id")
+	pegar_nome_professor_por_id $2
+	;;
+	"listar_turmas_por_professor")
+	listar_turmas_por_professor $2
+	;;
+	"listar_alunos_por_disciplina")
+	listar_alunos_por_disciplina $2
 	;;
 	"salvar")
 	sa_salvar

@@ -1,0 +1,126 @@
+<html>
+<script src="/static/js/jquery.js"></script>
+<script>
+	
+	$(document).ready(function() {
+		/*$("#cadastrarAluno").click(function(){
+			callAjax($(this).attr("url"))
+		});
+		$("#cadastrarDisciplina").click(function() {
+			callAjax($(this).attr("url"))
+		});
+		
+		$("#listarAlunos").click(function() {
+			callAjax($(this).attr("url"))
+		});
+		
+		$("#pesquisarAlunos").click(function() {
+			callAjax($(this).attr("url"))
+		});*/
+		
+		$(".btns-menu").find("li").each(function(){
+			$(this).click(function(){
+				callAjax($(this).attr("url"))
+			});
+		})
+		
+		function callAjax(url) {
+			$.ajax({
+				url: url, 
+				type: "POST", 
+			}).done(function(data) {
+				$("#content").html(data)
+			});
+		}
+		$("#cadastrarAluno").click();
+	});
+	function formValidade(form) {
+		var ok = true;
+		$(form).find("input").each(function(){
+			if ($(this).val() == "") {
+				$(this).focus();
+				ok = false
+				return false
+			}
+		});
+		return ok
+	}
+</script>
+<style>
+	body {
+		font-family: Helvetica,Arial, sans;
+	}
+	body, ul, li {
+		
+		margin: 0;
+		padding: 0;
+	}
+	
+	td {
+		padding: 5px 3px;
+	}
+	td > input {
+		border: 1px solid #ccc;
+		height: 30px;
+		width: 270px;
+		font-size: 14px;
+	}
+	
+	ul {
+		list-style: none;
+	}
+	label {
+		float:right;
+	}
+	.btn {
+		padding:10px;
+		margin-bottom: 1px;
+		border-radius: 3px;
+		background-color: #ccc;
+		cursor: pointer;
+	}
+	.btn:hover{
+		background-color: #eee;
+		
+	}
+	.title {
+		font-size:20px;
+		margin-bottom: 10px;
+		margin-top: 10px;
+	}
+	#side-bar {
+		width: 200px;
+		margin: 50px 30px 0 2px;
+		float:left;
+		height:100%;
+	}
+	#content {
+		float:left;
+		width:66%;
+	}
+</style>
+<body>
+<div id="side-bar">
+	<div style="border-bottom: 1px solid; padding: 5px">
+		<div class="title">Consulta e Cadastro</div>
+		<ul class="btns-menu">
+			<li id="cadastrarAluno" url="/cadastrar-aluno/"><div class="btn">Cadastrar Aluno</div></li>
+			<li id="cadastrarDisciplina" url="/cadastrar-disciplina/"><div class="btn">Cadastrar Disciplina</div></li>
+			<li id="listarAlunos" url="/listar-alunos/"><div class="btn">Listar Alunos</div></li>
+			<li id="pesquisarAlunos" url="/pesquisar-aluno/"><div class="btn">Pesquisar Alunos</div></li>
+		</ul>
+	</div>
+	<div style="border-bottom: 1px solid; padding: 5px">
+		<div class="title">Acesso Administrativo</div>
+		<ul class="btn-menu">
+			<li id="salvarTurma" url="/salvar-turma/"><div class="btn">Salvar turma</div></li>
+			<li id="reporTurma" url="/repor-turma/"><div class="btn">Repor turma</div></li>
+			<li id="apagarTurma" url="/apagar-turma/"><div class="btn">Apagar turma</div></li>
+			<li id="recuperarTurma" url="/recuperar-turma/"><div class="btn">Recuperar</div></li>
+			<li id="compactarTurma" url="/compactar-turma/"><div class="btn">Compactar</div></li>
+		</ul>
+	</div>
+</div>
+<div id="content"></div>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<script>
+	$("#enviarForm").click(function() {
+		if (!formValidade($("#formPost")))
+			return
+		$.ajax({
+			url: "/cadastrar-aluno-api/",
+			data: $("#formPost").serialize()
+		}).done(function(data) {
+			console.log(data)
+			alert(data)
+			$("#formPost").find("input").each(function(){
+				$(this).val("")
+			});
+			$("#formPost").find("select").each(function () {
+				$(this).val()
+			})
+		});
+	});
+</script>
+<div style="width: 360px; margin: 100px auto">
+	<center><h2>Cadastro de Aluno</h2></center>
+	<span>
+		<form id="formPost" method="post" action="/cadastrar-aluno-api/">
+			<table>
+				<tr>
+					<td><label>Matricula:</label></td>
+					<td><input name="matricula"></input></td>
+				</tr>
+				<tr>
+					<td><label>Nome:</label></td>
+					<td><input name="nome"></input></td>
+				</tr>
+				<tr>
+					<td><label>Conceito:</label></td>
+					<td><input name="conceito"></input></td>
+				</tr>
+				<tr>
+					<td><label>Disciplina:</label></td>
+					<td><select name="disciplina">
+						<option>Selecione uma disciplina</option>
+						{{range $value := .Disciplinas}}
+						<option value="{{$value}}">{{$value}}</option>
+						{{end}}
+					</select>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><div  id="enviarForm" class="btn" style="float:right;" >Enviar</div></td>
+				</tr>
+			</table>
+		</form>
+	</span>
+</div>

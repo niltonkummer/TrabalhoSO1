@@ -1,0 +1,25 @@
+<script>
+	$("#enviarForm").click(function() {
+		$.ajax({
+			url: "/pesquisar-aluno-api/",
+			type: "POST", 
+			data: $("#formPost").serialize()
+		}).done(function(data) {
+			$("#target").html(data)
+		});
+	});
+</script>
+
+<div style=" margin: 100px auto">
+	<center><h2>Pesquisar Aluno</h2></center>
+	<form id="formPost" method="post" name="formPost">
+		<table>
+			<tr>
+				<td><label>Nome:</label></td>
+				<td><input name="nome" /></td>
+				<td><div  id="enviarForm" class="btn" style="float:right;" >Enviar</div></td>
+			</tr>
+		</table>
+	</form>
+	<div id="target" style="border:1px solid #ccc; overflow-y: auto; height: 400px"></div>
+</div>
