@@ -1,0 +1,60 @@
+<script>
+	$("#disciplina").change(function() {
+		$.ajax({
+			url: "/listar-disciplina-bkp-api/",
+			data: $("#formPost").serialize()
+		}).done(function(data) {
+			var items = JSON.parse(data)
+			for (item in items) {
+				option = $("<option>");
+				$(option).val(items[item])
+				$(option).text(items[item])
+				var	name = $("#formPost").serializeArray()
+				$("[name=nome_disciplina]").val(name[0].value)
+				$("#disciplina_bkp").append(option)
+				$("#formPost2").show()
+				console.log()
+			}
+		});
+	});
+	$("#enviarForm").click(function() {
+		$.ajax({
+			url: "/recuperar-turma-api/",
+			data: $("#formPost2").serialize()
+		}).done(function(data) {
+			alert("Arquivo restaurado")
+		});
+	});
+</script>
+
+<div style=" margin: 100px auto">
+	<center><h2>Recuperar Disciplina</h2></center>
+	<form id="formPost" name="formPost">
+	
+		<table>
+			<tr>
+				<td><label>Disciplina:</label></td>
+				<td><select id="disciplina" name="disciplina">
+					<option>Selecione uma disciplina</option>
+					{{range $value := .Disciplinas}}
+					<option value="{{$value}}">{{$value}}</option>
+					{{end}}
+				</select>
+				</td>
+			</tr>
+		</table>
+	</form>
+	<form style="display:none" id="formPost2" name="formPost2" >
+		<input type="hidden" name="nome_disciplina">
+		<table>
+			<tr>
+				<td><label>Arquivo:</label></td>
+				<td><select id="disciplina_bkp" name="disciplina_bkp">
+					<option>Selecione um arquivo</option>
+				</select>
+				</td>
+				<td><div  id="enviarForm" class="btn" style="float:right;" >Recuperar</div></td>
+			</tr>
+		</table>
+	</form>
+</div>

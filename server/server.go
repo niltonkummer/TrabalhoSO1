@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os/exec"
 	//"path/filepath"
+	"encoding/json"
 	"strings"
 	"text/template"
-	"encoding/json"
 )
 
 var SHELL_FUNC_PATH = "./"
@@ -33,6 +33,8 @@ const (
 
 	verificar_disciplina = "verificar_disciplina"
 
+	listar_disciplina_bkp = "listar_disciplina_bkp" // $2
+
 	// params: disciplina
 	sa_salvar = "sa_salvar"
 
@@ -44,6 +46,7 @@ const (
 	// params: nome_disciplina{data}
 	sa_repor = "sa_repor"
 
+	sa_recuperar = "sa_recuperar" // $2
 	// params: nome_disciplina
 	sa_apagar = "sa_apagar"
 
@@ -65,14 +68,17 @@ func serve() {
 	http.HandleFunc("/salvar-turma/", salvarTurmaView)
 	http.HandleFunc("/repor-turma/", reporTurmaView)
 	http.HandleFunc("/apagar-turma/", apagarTurmaView)
+	http.HandleFunc("/recuperar-turma/", recuperarTurmaView)
 
 	http.HandleFunc("/cadastrar-aluno-api/", cadastrarAluno)
+	http.HandleFunc("/listar-disciplina-bkp-api/", listarDisciplinaBkp)
 	http.HandleFunc("/pesquisar-aluno-api/", pesquisarAluno)
 	http.HandleFunc("/listar-alunos-api/", listarAlunos)
 	http.HandleFunc("/cadastrar-disciplina-api/", cadastrarDisciplina)
 	http.HandleFunc("/salvar-turma-api/", salvarTurma)
 	http.HandleFunc("/verificar-turma-api/", verificarTurma)
 	http.HandleFunc("/repor-turma-api/", reporTurma)
+	http.HandleFunc("/recuperar-turma-api/", recuperarTurma)
 	http.HandleFunc("/apagar-turma-api/", apagarTurma)
 	http.ListenAndServe(":8080", nil)
 }
@@ -307,6 +313,46 @@ func apagarTurma(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(data))
 }
 
+func recuperarTurmaView(w http.ResponseWriter, r *http.Request) {
+	dis := A{listarDisciplinas()}
+	t := template.Must(template.ParseFiles("./files/html/recuperarDisciplina.html"))
+	t.Execute(w, dis)
+}
+
+func recuperarTurma(w http.ResponseWriter, r *http.Request) {
+	arquivo := r.FormValue("disciplina_bkp")
+	disciplina := r.FormValue("nome_disciplina")
+	exe:= exec.Command(SHELL_FUNCTIONS,
+		sa_recuperar,
+		disciplina,
+		arquivo)
+	data, err := exe.Output()
+	fmt.Printf("%#v", exe)
+	if err != nil {
+		http.Error(w, string(data)+" "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Write([]byte(data))
+}
+
+type B struct {
+	Arquivos []string
+}
+
+func listarDisciplinaBkp(w http.ResponseWriter, r *http.Request) {
+	nome := r.FormValue("disciplina")
+	data, err := exec.Command(SHELL_FUNCTIONS,
+		listar_disciplina_bkp,
+		nome).Output()
+	if err != nil {
+		http.Error(w, string(data)+" "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	slc := strings.Split(string(data), "\n")
+	slc = slc[:len(slc)-1]
+	data, _ = json.Marshal(slc)
+	w.Write([]byte(data))
+}
 
 func main() {
 	// SHELL_FUNC_PATH, _ = filepath.Abs(SHELL_FUNCTIONS)

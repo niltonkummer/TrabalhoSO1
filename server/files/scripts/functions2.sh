@@ -139,7 +139,7 @@ function listar_disciplina_bkp() {
 
 # params: disciplina, arquivo
 function sa_recuperar() {
-	cp -f "$DIRETORIO_DISCIPLINAS/$1/bkp/$file" "$DIRETORIO_DISCIPLINAS/$1/turma"
+	cp -f "$DIRETORIO_DISCIPLINAS/$1/bkp/$2" "$DIRETORIO_DISCIPLINAS/$1/turma"
 }
 
 function sa_apagar() {
@@ -176,6 +176,9 @@ case $1 in
 	;;
 	"sa_repor")
 	sa_repor "$2"
+	;;
+	"sa_recuperar")
+	sa_recuperar "$2" "$3"
 	;;
 	"sa_apagar")
 	sa_apagar "$2"
