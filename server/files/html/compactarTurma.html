@@ -5,6 +5,9 @@
 			return
 		}
 		
+		if ($("[name=compactarCheck]:checked").length == 1) {
+			$("[name=compactar]").val("1")
+		}
 		$.ajax({
 			url: "/compactar-turma-api/",
 			data: $("#formPost").serialize()
@@ -20,6 +23,7 @@
 <div style=" margin: 100px auto">
 	<center><h2>Compactar turma</h2></center>
 	<form id="formPost" name="formPost">
+		<input type="hidden" name="compactar" value="0" />
 		<table>
 			<tr>
 				<td><label>Disciplina:</label></td>
@@ -30,7 +34,7 @@
 					{{end}}
 				</select>
 				</td>
-				<td><div><input type="checkbox" name="compactar" value="compactar" />Compactar</div></td>
+				<td><div><input type="checkbox" name="compactarCheck" value="compactarCheck" />Compactar</div></td>
 				<td><div  id="enviarForm" class="btn" style="float:right;" >Salvar</div></td>
 			</tr>
 		</table>

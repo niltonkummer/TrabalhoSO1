@@ -81,6 +81,7 @@ func serve() {
 	http.HandleFunc("/repor-turma-api/", reporTurma)
 	http.HandleFunc("/recuperar-turma-api/", recuperarTurma)
 	http.HandleFunc("/apagar-turma-api/", apagarTurma)
+	http.HandleFunc("/compactar-turma-api/", compactarTurma)
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -355,7 +356,7 @@ func listarDisciplinaBkp(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(data))
 }
 
-func compactarTurmaView() {
+func compactarTurmaView(w http.ResponseWriter, r *http.Request) {
 	dis := A{listarDisciplinas()}
 	t := template.Must(template.ParseFiles("./files/html/compactarTurma.html"))
 	t.Execute(w, dis)
