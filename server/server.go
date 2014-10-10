@@ -50,7 +50,7 @@ const (
 	// params: nome_disciplina
 	sa_apagar = "sa_apagar"
 
-	compactar = "compactar"
+	sa_compactar = "sa_compactar"
 )
 
 type HtmlTemplate struct {
@@ -69,6 +69,7 @@ func serve() {
 	http.HandleFunc("/repor-turma/", reporTurmaView)
 	http.HandleFunc("/apagar-turma/", apagarTurmaView)
 	http.HandleFunc("/recuperar-turma/", recuperarTurmaView)
+	http.HandleFunc("/compactar-turma/", compactarTurmaView)
 
 	http.HandleFunc("/cadastrar-aluno-api/", cadastrarAluno)
 	http.HandleFunc("/listar-disciplina-bkp-api/", listarDisciplinaBkp)
@@ -322,7 +323,7 @@ func recuperarTurmaView(w http.ResponseWriter, r *http.Request) {
 func recuperarTurma(w http.ResponseWriter, r *http.Request) {
 	arquivo := r.FormValue("disciplina_bkp")
 	disciplina := r.FormValue("nome_disciplina")
-	exe:= exec.Command(SHELL_FUNCTIONS,
+	exe := exec.Command(SHELL_FUNCTIONS,
 		sa_recuperar,
 		disciplina,
 		arquivo)
@@ -340,6 +341,27 @@ type B struct {
 }
 
 func listarDisciplinaBkp(w http.ResponseWriter, r *http.Request) {
+	nome := r.FormValue("disciplina")
+	data, err := exec.Command(SHELL_FUNCTIONS,
+		listar_disciplina_bkp,
+		nome).Output()
+	if err != nil {
+		http.Error(w, string(data)+" "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	slc := strings.Split(string(data), "\n")
+	slc = slc[:len(slc)-1]
+	data, _ = json.Marshal(slc)
+	w.Write([]byte(data))
+}
+
+func compactarTurmaView() {
+	dis := A{listarDisciplinas()}
+	t := template.Must(template.ParseFiles("./files/html/compactarTurma.html"))
+	t.Execute(w, dis)
+	}
+
+func compactarTurma(w http.ResponseWriter, r *http.Request) {
 	nome := r.FormValue("disciplina")
 	data, err := exec.Command(SHELL_FUNCTIONS,
 		listar_disciplina_bkp,

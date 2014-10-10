@@ -146,6 +146,13 @@ function sa_apagar() {
 	rm -rf "$DIRETORIO_DISCIPLINAS/$1/"
 }
 
+function sa_compactar() {
+	arquivo="/tmp/$1.tar.gz"
+	tar -cf$2 "$arquivo" "$DIRETORIO_DISCIPLINAS/$1/"; 
+	rm -rf "$DIRETORIO_DISCIPLINAS/$1/"
+	mv "$arquivo" "$DIRETORIO_DISCIPLINAS/$1/"; 
+}
+
 # Verifica a função que vai executar
 case $1 in 
 	"cadastrar_aluno")
@@ -184,5 +191,6 @@ case $1 in
 	sa_apagar "$2"
 	;;
 	"compactar")
+	sa_compactar "$2" "$3"
 	;;
 esac

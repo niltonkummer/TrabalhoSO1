@@ -1,0 +1,38 @@
+<script>
+	$("#enviarForm").click(function() {
+		if ($("[name=disciplina]").val() == "Selecione uma disciplina") {
+			alert("Selecione uma turma")
+			return
+		}
+		
+		$.ajax({
+			url: "/compactar-turma-api/",
+			data: $("#formPost").serialize()
+		}).done(function(data) {
+			alert("Turma compactada")
+			location.href = "/"
+		})
+		
+		
+	});
+</script>
+
+<div style=" margin: 100px auto">
+	<center><h2>Compactar turma</h2></center>
+	<form id="formPost" name="formPost">
+		<table>
+			<tr>
+				<td><label>Disciplina:</label></td>
+				<td><select name="disciplina">
+					<option>Selecione uma disciplina</option>
+					{{range $value := .Disciplinas}}
+					<option value="{{$value}}">{{$value}}</option>
+					{{end}}
+				</select>
+				</td>
+				<td><div><input type="checkbox" name="compactar" value="compactar" />Compactar</div></td>
+				<td><div  id="enviarForm" class="btn" style="float:right;" >Salvar</div></td>
+			</tr>
+		</table>
+	</form>
+</div>
